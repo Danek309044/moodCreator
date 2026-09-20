@@ -7,15 +7,15 @@ to find real tracks that match, shows you a preview, and lets you commit the
 playlist to your Spotify account.
 
 Examples:
-- `dnb and yeat feat don toliver`
-- `cesky rap`
+- `yeat feat don`
+- `drake and travis scott mix`
 - `chill jazz for a rainy day`
-- `ptk yzo casanova bulhar`
+- `morning drive to school`
 
 ## Features
 
 - Reads a mood, artist list, genre, or any mix
-- Resolves artist nicknames with context (`yzo` becomes Yzomandias in a Czech rap request)
+- Resolves artist nicknames with context (`don` becomes Don Toliver)
 - Pulls real tracks from Last.fm - never hallucinated names
 - Preview mode: remove tracks, rename the playlist, regenerate
 - Creates private or public playlists on Spotify
@@ -194,5 +194,6 @@ delete .lastfm_cache.json and restart the server.
 
 ## Credits
 
+This app was fully vibecoded by Deepseek.
 Data provided by Last.fm Limited.
 This app is in no way affiliated with Spotify AB.
