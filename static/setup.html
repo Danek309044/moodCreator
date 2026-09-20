@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setup · moodCreator</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page-center">
+  <h1 class="hero-title">
+    Set up
+    <span class="brand-big">moodCreator</span>
+  </h1>
+
+  <div class="hero-card">
+    <ul>
+      <li>Paste your API keys. They're stored in <code>data/settings.json</code> — plaintext, local only.</li>
+      <li>Register the redirect URI below in your Spotify app's dashboard under "Redirect URIs".</li>
+      <li>Spotify only accepts HTTPS, except for <code>127.0.0.1</code>. For LAN access, use a tunnel (cloudflared, ngrok) or a reverse proxy.</li>
+    </ul>
+
+    <label class="field-label">Spotify Client ID
+      <input id="sid" type="text" class="text-input" autocomplete="off" spellcheck="false">
+    </label>
+    <label class="field-label">DeepSeek API Key
+      <input id="dsk" type="text" class="text-input" autocomplete="off" spellcheck="false">
+    </label>
+    <label class="field-label">Last.fm API Key
+      <input id="lfm" type="text" class="text-input" autocomplete="off" spellcheck="false">
+    </label>
+    <label class="field-label">Redirect URI <span class="muted" style="text-transform: none; font-weight: 400;">(optional — leave blank to auto-detect)</span>
+      <input id="ruri" type="text" class="text-input" autocomplete="off" spellcheck="false"
+             placeholder="http://127.0.0.1:4444/callback">
+    </label>
+
+    <div class="row row-end" style="margin-top: 20px;">
+      <button id="save" class="btn btn-primary">Save &amp; continue</button>
+    </div>
+    <div id="err" class="error hidden"></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+(async () => {
+  try {
+    const state = await (await fetch("/api/state")).json();
+    if (state.redirect_uri_explicit) {
+      $("ruri").value = state.redirect_uri_explicit;
+    } else if (state.redirect_uri) {
+      $("ruri").placeholder = state.redirect_uri;
+    }
+  } catch (e) { /* ignore */ }
+})();
+
+$("save").addEventListener("click", async () => {
+  $("err").classList.add("hidden");
+  $("save").disabled = true;
+  $("save").textContent = "saving…";
+  try {
+    const r = await fetch("/api/setup", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        spotify_client_id: $("sid").value,
+        deepseek_api_key:  $("dsk").value,
+        lastfm_api_key:    $("lfm").value,
+        redirect_uri:      $("ruri").value,
+      }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    location.href = "/";
+  } catch (e) {
+    $("err").textContent = String(e);
+    $("err").classList.remove("hidden");
+  } finally {
+    $("save").disabled = false;
+    $("save").textContent = "Save & continue";
+  }
+});
+</script>
+</body>
+</html>

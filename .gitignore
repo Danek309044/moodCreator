@@ -1,0 +1,46 @@
+# ---- runtime state (never commit) ----
+data/
+runs.jsonl
+*.jsonl
+
+# ---- caches ----
+.lastfm_cache.json
+.spotify_search_cache.json
+.spotify_catalog_cache.json
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# ---- env / secrets ----
+.env
+.env.*
+settings.json
+settings-bk.json
+*-bk.json
+
+# ---- editors ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- os ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- logs / temp ----
+*.log
+*.tmp

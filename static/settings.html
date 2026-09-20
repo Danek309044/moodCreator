@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings · moodCreator</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page">
+<main>
+  <header class="app-header"></header>
+
+  <h2 class="section-title">Settings</h2>
+
+  <div class="card">
+    <div class="field-heading">Account</div>
+    <p class="muted" id="user-line">—</p>
+    <div class="row" style="margin-top: 16px;">
+      <button id="logout" class="btn">Log out</button>
+      <button id="delete-account" class="btn btn-danger">Delete my account</button>
+    </div>
+    <p class="muted" style="font-size: 12px; margin-top: 12px;">
+      "Delete my account" removes your stored tokens, session, history, and
+      previews. Playlists already created on Spotify are not affected.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="field-heading">Your activity</div>
+    <div id="stats-self">
+      <p class="muted">loading…</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field-heading">History</div>
+    <p class="muted">Remove all past playlist entries.</p>
+    <div class="row" style="margin-top: 16px;">
+      <button id="clear-history" class="btn btn-danger">Clear history</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="admin-card">
+    <div class="field-heading">Admin</div>
+    <p class="muted">You're the app admin. Edit the API keys and credentials here.</p>
+    <div class="row" style="margin-top: 16px;">
+      <a href="/setup" class="btn">Edit API keys →</a>
+    </div>
+  </div>
+
+  <div class="card hidden" id="admin-stats-card">
+    <div class="field-heading">Server activity</div>
+    <div id="stats-server">
+      <p class="muted">loading…</p>
+    </div>
+  </div>
+
+  <div id="error-box" class="error hidden">
+    <div id="error-text"></div>
+    <div class="row" style="margin-top: 12px;">
+      <button id="error-home" class="btn">Back to home</button>
+    </div>
+  </div>
+</main>
+</div>
+<script src="/static/nav.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function statRow(stats) {
+    return (
+      '<div class="stat-row">' +
+        '<div class="stat">' +
+          '<div class="stat-value">' + stats.previews + '</div>' +
+          '<div class="stat-label">previews</div>' +
+        '</div>' +
+        '<div class="stat">' +
+          '<div class="stat-value">' + stats.playlists + '</div>' +
+          '<div class="stat-label">playlists</div>' +
+        '</div>' +
+        '<div class="stat">' +
+          '<div class="stat-value">' + stats.tracks + '</div>' +
+          '<div class="stat-label">tracks</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  async function loadSelfStats() {
+    try {
+      const res = await window.apiFetch("/api/stats");
+      if (!res.ok) {
+        $("stats-self").innerHTML = '<p class="muted">could not load stats</p>';
+        return;
+      }
+      const stats = await res.json();
+      $("stats-self").innerHTML = statRow(stats);
+    } catch (e) {
+      $("stats-self").innerHTML = '<p class="muted">could not load stats</p>';
+    }
+  }
+
+  async function loadServerStats() {
+    try {
+      const res = await window.apiFetch("/api/admin/stats");
+      if (!res.ok) {
+        $("stats-server").innerHTML = '<p class="muted">could not load stats</p>';
+        return;
+      }
+      const data = await res.json();
+
+      const parts = [];
+      parts.push('<div class="stat-subtitle">All users</div>');
+      parts.push(statRow(data.aggregate));
+
+      parts.push('<div class="stat-subtitle">Average per user</div>');
+      parts.push(statRow(data.average_per_user));
+
+      const users = Object.entries(data.per_user || {})
+        .sort((a, b) => b[1].playlists - a[1].playlists);
+
+      if (users.length) {
+        parts.push('<div class="stat-subtitle">Per user</div>');
+        parts.push(
+          '<ul class="stat-list">' +
+            users.map(([uid, s]) =>
+              '<li>' +
+                '<span>' + esc(uid) + '</span>' +
+                '<span class="stat-count">' +
+                  s.previews + 'p · ' + s.playlists + 'pl · ' + s.tracks + 't' +
+                '</span>' +
+              '</li>'
+            ).join("") +
+          '</ul>'
+        );
+      }
+
+      $("stats-server").innerHTML = parts.join("");
+    } catch (e) {
+      $("stats-server").innerHTML = '<p class="muted">could not load stats</p>';
+    }
+  }
+
+  async function boot() {
+    const state = await window.initNav();
+    if (!state) return;
+
+    $("user-line").textContent = "Logged in as " + state.user_id;
+    if (state.is_admin) {
+      $("admin-card").classList.remove("hidden");
+      $("admin-stats-card").classList.remove("hidden");
+    }
+    if ($("error-home")) {
+      $("error-home").addEventListener("click", () => { location.href = "/"; });
+    }
+
+    loadSelfStats();
+    if (state.is_admin) loadServerStats();
+  }
+
+  $("logout").addEventListener("click", async () => {
+    await window.apiFetch("/api/account/logout", {method: "POST"});
+    location.href = "/login";
+  });
+
+  $("delete-account").addEventListener("click", async () => {
+    if (!confirm("Delete your account data? This removes your session, " +
+                 "tokens, history, and previews. Spotify playlists stay.")) return;
+    await window.apiFetch("/api/account/delete", {method: "POST"});
+    location.href = "/login";
+  });
+
+  $("clear-history").addEventListener("click", async () => {
+    if (!confirm("Clear all history entries and the last preview?")) return;
+    await window.apiFetch("/api/history/clear", {method: "POST"});
+    localStorage.removeItem("sm_last_preview");
+    alert("history cleared");
+    loadSelfStats();
+    if (!$("admin-stats-card").classList.contains("hidden")) loadServerStats();
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>History · moodCreator</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page">
+<main>
+  <header class="app-header"></header>
+
+  <div id="last-preview-section" class="section hidden">
+    <h2 class="section-title">Last Preview</h2>
+    <div id="last-preview-card" class="card">
+      <div class="history-head">
+        <div>
+          <h2 id="lp-name">—</h2>
+          <div class="muted" id="lp-meta"></div>
+        </div>
+        <div class="row">
+          <button id="lp-use" class="btn btn-primary">Use this</button>
+        </div>
+      </div>
+      <div id="lp-preview" class="history-preview">
+        <ol id="lp-tracks" class="tracks"></ol>
+      </div>
+      <div id="lp-more" class="history-more hidden"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">History</h2>
+    <div id="empty" class="card hidden">
+      <p class="muted" style="margin: 0 0 8px;">No playlists yet.</p>
+      <p style="margin: 0;"><a href="/" style="color: var(--green);">Make one →</a></p>
+    </div>
+    <div id="list"></div>
+  </div>
+
+  <div id="error-box" class="error hidden">
+    <div id="error-text"></div>
+    <div class="row" style="margin-top: 12px;">
+      <button id="error-home" class="btn">Back to home</button>
+    </div>
+  </div>
+</main>
+</div>
+<script src="/static/nav.js"></script>
+<script src="/static/history.js"></script>
+</body>
+</html>

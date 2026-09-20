@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>moodCreator</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="page">
+<main>
+  <header class="app-header"></header>
+
+  <section id="input-stage" class="card">
+    <div class="field-heading">mood</div>
+    <input id="mood" type="text" class="mood-input"
+           placeholder="mood"
+           autocomplete="off" spellcheck="false"
+           list="mood-history">
+    <datalist id="mood-history"></datalist>
+
+    <div class="field">
+      <div class="field-heading">track count</div>
+      <div class="count-pills" id="count-buttons">
+        <button type="button" class="count-pill" data-count="5">5</button>
+        <button type="button" class="count-pill" data-count="10">10</button>
+        <button type="button" class="count-pill selected" data-count="15">15</button>
+        <button type="button" class="count-pill" data-count="20">20</button>
+        <button type="button" class="count-pill" data-count="25">25</button>
+        <button type="button" class="count-pill" data-count="30">30</button>
+        <button type="button" class="count-pill" data-count="35">35</button>
+        <button type="button" class="count-pill" data-count="40">40</button>
+        <button type="button" class="count-pill" data-count="45">45</button>
+        <button type="button" class="count-pill" data-count="50">50</button>
+        <input type="number" id="count-custom" class="count-pill count-custom"
+               min="5" max="100" step="1" placeholder="custom" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="toggle-list">
+      <div class="toggle-item">
+        <div class="toggle-info">
+          <div class="toggle-label">Deep cuts</div>
+          <div class="toggle-hint">Prefer lesser-known tracks over an artist's top hits</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="deep-cuts">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-item">
+        <div class="toggle-info">
+          <div class="toggle-label">Public playlist</div>
+          <div class="toggle-hint">Make the playlist visible on your Spotify profile</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="public-toggle">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="row row-end" style="margin-top: 24px; align-items: center;">
+      <span class="shortcut-hint">
+        <kbd>⏎</kbd> generate · <kbd>esc</kbd> cancel
+      </span>
+      <button id="generate" class="btn btn-primary">Generate Playlist</button>
+    </div>
+  </section>
+
+  <section id="stream-stage" class="card hidden">
+    <button type="button" class="stream-cancel" id="stream-cancel" title="Cancel (Esc)">×</button>
+    <div class="stream-header">
+      <span class="spinner"></span>
+      <span id="stream-status">working…</span>
+    </div>
+    <div id="stream-log" class="stream-log"></div>
+  </section>
+
+  <section id="preview-stage" class="hidden">
+    <div class="card">
+      <div class="preview-header">
+        <div class="preview-title">
+          <div class="pv-name-row">
+            <h2 id="pv-name" contenteditable="true" spellcheck="false"></h2>
+            <svg class="pen-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </div>
+          <div class="muted" id="pv-meta"></div>
+        </div>
+        <div class="row">
+          <button id="copy-list" class="btn" title="Copy tracklist">Copy</button>
+          <button id="regen" class="btn">Regenerate</button>
+          <button id="create" class="btn btn-primary">Create playlist</button>
+        </div>
+      </div>
+      <ol id="pv-tracks" class="tracks"></ol>
+    </div>
+  </section>
+
+  <section id="result-stage" class="card hidden">
+    <h2 style="font-size: 22px; font-weight: 800; margin: 0 0 8px;">Done</h2>
+    <p id="rs-meta" class="muted"></p>
+    <p><a id="rs-link" href="#" target="_blank" style="color: var(--green); font-weight: 600;">Open on Spotify ↗</a></p>
+    <div class="row" style="margin-top: 16px;">
+      <button id="again" class="btn">New playlist</button>
+      <a href="/history" class="btn">History</a>
+    </div>
+  </section>
+
+  <div id="error-box" class="error hidden">
+    <div id="error-text"></div>
+    <div class="row" style="margin-top: 12px;">
+      <button id="error-home" class="btn">Back to home</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="/static/nav.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
