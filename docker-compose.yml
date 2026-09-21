@@ -1,6 +1,7 @@
 services:
   moodcreator:
-    build: .
+    image: ghcr.io/danek309044/moodcreator:latest
+    # build: .   # uncomment to build from source instead
     container_name: moodcreator
     ports:
       - "4444:4444"
