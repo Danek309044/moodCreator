@@ -145,6 +145,18 @@ requires a user context for the Spotify token.
 
 ## Troubleshooting
 
+**Public playlist created as private**
+
+If `Create Playlist` with Public toggle on still produces a private
+playlist, check your Spotify account settings. The account default
+overrides whatever the API requests, and the API doesn't tell you it
+did so — it returns success either way.
+
+**Mobile app:** Settings → Privacy and Sharing → Playlist visibility
+
+Enable "Make new playlists public". After that, the API's `public` flag works as
+expected.
+
 **Rate limited for XXXXXs**
 
 Spotify has flagged the app. The cooldown decays on its own - hours, not

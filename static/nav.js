@@ -22,6 +22,57 @@
     `;
   }
 
+  function ensureModal() {
+    if ($("modal-backdrop")) return;
+    const div = document.createElement("div");
+    div.id = "modal-backdrop";
+    div.className = "modal-backdrop hidden";
+    div.innerHTML =
+      '<div class="modal">' +
+        '<h2 class="modal-title" id="modal-title">Are you sure?</h2>' +
+        '<p class="modal-body" id="modal-body"></p>' +
+        '<div class="modal-actions">' +
+          '<button id="modal-cancel" class="btn">Cancel</button>' +
+          '<button id="modal-confirm" class="btn">Confirm</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(div);
+  }
+
+  function showConfirm(title, body, confirmLabel, onConfirm, variant) {
+    ensureModal();
+    const backdrop = $("modal-backdrop");
+    const titleEl = $("modal-title");
+    const bodyEl = $("modal-body");
+    const cancelBtn = $("modal-cancel");
+    const confirmBtn = $("modal-confirm");
+
+    confirmBtn.className = "btn " +
+      (variant === "danger" ? "btn-danger" : "btn-primary");
+
+    titleEl.textContent = title;
+    bodyEl.textContent = body;
+    confirmBtn.textContent = confirmLabel || "Confirm";
+    backdrop.classList.remove("hidden");
+
+    function cleanup() {
+      backdrop.classList.add("hidden");
+      confirmBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      backdrop.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onEsc);
+    }
+    function onOk() { cleanup(); onConfirm(); }
+    function onCancel() { cleanup(); }
+    function onBackdrop(e) { if (e.target === backdrop) cleanup(); }
+    function onEsc(e) { if (e.key === "Escape") cleanup(); }
+
+    confirmBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click", onBackdrop);
+    document.addEventListener("keydown", onEsc);
+  }
+
   async function apiFetch(url, options) {
     const res = await fetch(url, options);
     if (res.status === 401) {
@@ -36,6 +87,7 @@
     if (!header) return null;
 
     header.innerHTML = buildHeader();
+    ensureModal();
 
     const trigger = $("menu-trigger");
     const items = $("menu-items");
@@ -92,4 +144,5 @@
 
   window.apiFetch = apiFetch;
   window.initNav = initNav;
+  window.showConfirm = showConfirm;
 })();

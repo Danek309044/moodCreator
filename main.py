@@ -1,4 +1,6 @@
 """Pipeline: generate (agent) + commit (Spotify). Plus a CLI wrapper."""
+import logger
+log = logger.get_logger("pipeline")
 
 import json
 import random
@@ -44,6 +46,7 @@ def print_dry_run(result: dict, count: int) -> None:
 def generate(mood: str, count: int,
              avoid: list[dict] | None = None,
              deep_cuts: bool = False,
+             public: bool = False,
              on_event=None) -> dict:
     avoid = avoid or []
 
@@ -126,10 +129,14 @@ def generate(mood: str, count: int,
                 tag_cache[artist] = ""
         t["tag"] = tag_cache.get(artist, "")
 
+    tagged = sum(1 for t in proposal["tracks"] if t.get("tag"))
+    emit("tagging_done", tagged=tagged, total=len(proposal["tracks"]))
+
     return {
         "mood": mood,
         "count_requested": count,
         "deep_cuts": deep_cuts,
+        "public": public,
         "parsed": parsed,
         "playlist_name": proposal["playlist_name"],
         "genre": proposal.get("genre", ""),
@@ -200,7 +207,7 @@ def fill_missing(sp, missing, found, uris, hard,
 
 def commit(proposal: dict, mood: str,
            user_id: str,
-           public: bool = False,
+           public: bool | None = None,
            catalog_enabled: bool = True,
            on_event=None) -> dict:
     def emit(kind, **data):
@@ -232,7 +239,10 @@ def commit(proposal: dict, mood: str,
     if not uris:
         raise RuntimeError("Nothing matched on Spotify.")
 
-    # Compose description: "genre · deep cuts · generated from: mood"
+    effective_public = bool(proposal.get("public", False))
+    if public is not None:
+        effective_public = public
+
     parts = []
     if genre:
         parts.append(genre)
@@ -245,13 +255,23 @@ def commit(proposal: dict, mood: str,
     playlist = sp.create_playlist(
         proposal["playlist_name"],
         description=description,
-        public=public,
+        public=effective_public,
     )
+
+    if effective_public:
+        try:
+            sp.set_playlist_public(playlist["id"], True)
+        except Exception as e:
+            import logger as _logger
+            _logger.get_logger("pipeline").warning(
+                "set_playlist_public failed: %s", e,
+            )
+
     sp.add_items(playlist["id"], uris)
 
     result = {
         **proposal,
-        "public": public,
+        "public": effective_public,
         "spotify_url": playlist["external_urls"]["spotify"],
         "spotify_playlist_id": playlist["id"],
         "tracks": found,
@@ -267,7 +287,7 @@ def commit(proposal: dict, mood: str,
         "parsed": proposal.get("parsed", {}),
         "playlist_name": proposal["playlist_name"],
         "genre": genre,
-        "public": public,
+        "public": effective_public,
         "tracks": found,
         "spotify_url": result["spotify_url"],
         "spotify_playlist_id": result["spotify_playlist_id"],

@@ -175,12 +175,14 @@
     if ($("deep-cuts")) {
       $("deep-cuts").addEventListener("change", function (e) {
         deepCuts = e.target.checked;
+        if (lastProposal) lastProposal.deep_cuts = deepCuts;
         savePrefs();
       });
     }
     if ($("public-toggle")) {
       $("public-toggle").addEventListener("change", function (e) {
         isPublic = e.target.checked;
+        if (lastProposal) lastProposal.public = isPublic;
         savePrefs();
       });
     }
@@ -381,9 +383,15 @@
     else if (e === "empty_streak_nudge") { appendLog("empty results — nudging agent to submit", "warn"); }
     else if (e === "last_chance") { appendLog("no usable results — forcing submission", "warn"); }
     else if (e === "tagging_start") { appendLog("tagging " + evt.total + " track(s)…"); }
+    else if (e === "tagging_done") {
+      appendLog("  → tagged " + evt.tagged + " of " + evt.total + " track(s)");
+    }
     else if (e === "spotify_auth") {
       if ($("stream-status")) $("stream-status").textContent = "authenticating with Spotify…";
       appendLog("spotify auth");
+    }
+        else if (e === "public_status") {
+      appendLog("  → creating as " + (evt.public ? "public" : "private"));
     }
     else if (e === "spotify_search_start") {
       if ($("stream-status")) $("stream-status").textContent = "searching Spotify…";
@@ -418,10 +426,11 @@
   function renderPreview(result) {
     if ($("pv-name")) $("pv-name").textContent = result.playlist_name || "Untitled";
     if ($("pv-meta")) {
-      $("pv-meta").textContent =
-        result.tracks.length + " of " + result.count_requested + " tracks" +
-        (result.genre ? " · " + result.genre : "") +
-        (result.deep_cuts ? " · deep cuts" : "");
+      const metaParts = [result.tracks.length + " tracks"];
+      if (result.genre) metaParts.push(result.genre);
+      if (result.deep_cuts) metaParts.push("deep cuts");
+      if (result.public) metaParts.push("public");
+      $("pv-meta").textContent = metaParts.join(" · ");
     }
     renderTracks(result.tracks || []);
     show("preview");
@@ -555,7 +564,8 @@
     if ($("stream-status")) $("stream-status").textContent = "starting…";
 
     streamPost("/api/preview",
-               { mood: mood, count: selectedCount, avoid: avoid, deep_cuts: deepCuts },
+               { mood: mood, count: selectedCount, avoid: avoid,
+                 deep_cuts: deepCuts, public: isPublic },
                handleEvent
     ).then(function () {
       if (lastError) { setError(lastError); return; }
@@ -591,8 +601,12 @@
     show("stream");
     if ($("stream-status")) $("stream-status").textContent = "creating…";
 
+    if ($("public-toggle")) {
+      lastProposal.public = !!$("public-toggle").checked;
+    }
+
     streamPost("/api/create",
-               { proposal: lastProposal, mood: mood, public: isPublic },
+               { proposal: lastProposal, mood: mood },
                handleEvent
     ).then(function () {
       if (lastError) { setError(lastError); return; }

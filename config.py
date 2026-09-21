@@ -8,7 +8,7 @@ import os
 
 # --- OAuth ---
 SPOTIFY_REDIRECT_URI = "http://127.0.0.1:4444/callback"
-SPOTIFY_SCOPES       = "user-read-private playlist-modify-private"
+SPOTIFY_SCOPES       = "user-read-private playlist-modify-private playlist-modify-public"
 
 # --- Data layout ---
 DATA_DIR      = "data"

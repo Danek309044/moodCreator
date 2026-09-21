@@ -269,6 +269,13 @@ class Spotify:
             "/me/playlists",
             json={"name": name, "description": description, "public": public},
         )
+        
+    def set_playlist_public(self, playlist_id: str, public: bool) -> dict:
+        return self._req(
+            "PUT",
+            f"/playlists/{playlist_id}",
+            json={"public": public},
+        )
 
     def add_items(self, playlist_id: str, uris: list[str]) -> None:
         for i in range(0, len(uris), 100):

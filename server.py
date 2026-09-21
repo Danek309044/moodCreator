@@ -276,6 +276,7 @@ class PreviewBody(BaseModel):
     count: int
     avoid: list[dict] | None = None
     deep_cuts: bool = False
+    public: bool = False
 
 
 @app.post("/api/preview")
@@ -295,6 +296,7 @@ def preview(body: PreviewBody, request: Request):
             body.mood, body.count,
             avoid=body.avoid or [],
             deep_cuts=body.deep_cuts,
+            public=body.public,
             on_event=emit,
         )
         previews.record(uid)
@@ -327,7 +329,6 @@ def preview_clear(request: Request):
 class CreateBody(BaseModel):
     proposal: dict
     mood: str
-    public: bool = False
 
 
 @app.post("/api/create")
@@ -337,8 +338,7 @@ def create(body: CreateBody, request: Request):
         return JSONResponse({"error": "not logged in"}, status_code=401)
 
     def worker(emit):
-        commit(body.proposal, body.mood, user_id=uid,
-               public=body.public, on_event=emit)
+        commit(body.proposal, body.mood, user_id=uid, on_event=emit)
 
     return _sse(worker)
 
@@ -399,14 +399,16 @@ def api_history_recreate(body: RecreateBody, request: Request):
         "tracks": entry["tracks"],
         "count_requested": len(entry["tracks"]),
         "parsed": entry.get("parsed", {}),
+        "deep_cuts": entry.get("deep_cuts", False),
+        "public": entry.get("public", False),
     }
 
     def worker(emit):
-        commit(proposal, entry.get("mood", ""), user_id=uid,
-               public=False, on_event=emit)
+        commit(proposal, entry.get("mood", ""), user_id=uid, on_event=emit)
+        # Remove the original entry now that a fresh playlist was created.
+        history.delete_entry(uid, body.ts)
 
     return _sse(worker)
-
 
 # --------------------------------------------------------------- account
 

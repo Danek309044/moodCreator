@@ -18,8 +18,8 @@
     <div class="field-heading">Account</div>
     <p class="muted" id="user-line">—</p>
     <div class="row" style="margin-top: 16px;">
-      <button id="logout" class="btn">Log out</button>
-      <button id="delete-account" class="btn btn-danger">Delete my account</button>
+      <button id="logout" class="btn">Log Out</button>
+      <button id="delete-account" class="btn btn-danger">Delete My Account</button>
     </div>
     <p class="muted" style="font-size: 12px; margin-top: 12px;">
       "Delete my account" removes your stored tokens, session, history, and
@@ -28,7 +28,7 @@
   </div>
 
   <div class="card">
-    <div class="field-heading">Your activity</div>
+    <div class="field-heading">Your Activity</div>
     <div id="stats-self">
       <p class="muted">loading…</p>
     </div>
@@ -38,7 +38,7 @@
     <div class="field-heading">History</div>
     <p class="muted">Remove all past playlist entries.</p>
     <div class="row" style="margin-top: 16px;">
-      <button id="clear-history" class="btn btn-danger">Clear history</button>
+      <button id="clear-history" class="btn btn-danger">Clear History</button>
     </div>
   </div>
 
@@ -46,12 +46,12 @@
     <div class="field-heading">Admin</div>
     <p class="muted">You're the app admin. Edit the API keys and credentials here.</p>
     <div class="row" style="margin-top: 16px;">
-      <a href="/setup" class="btn">Edit API keys →</a>
+      <a href="/setup" class="btn">Edit API Keys →</a>
     </div>
   </div>
 
   <div class="card hidden" id="admin-stats-card">
-    <div class="field-heading">Server activity</div>
+    <div class="field-heading">Server Activity</div>
     <div id="stats-server">
       <p class="muted">loading…</p>
     </div>
@@ -60,7 +60,7 @@
   <div id="error-box" class="error hidden">
     <div id="error-text"></div>
     <div class="row" style="margin-top: 12px;">
-      <button id="error-home" class="btn">Back to home</button>
+      <button id="error-home" class="btn">Back to Home</button>
     </div>
   </div>
 </main>
@@ -100,7 +100,7 @@
   async function loadSelfStats() {
     try {
       const res = await window.apiFetch("/api/stats");
-      if (!res.ok) {
+      if (!res || !res.ok) {
         $("stats-self").innerHTML = '<p class="muted">could not load stats</p>';
         return;
       }
@@ -114,24 +114,24 @@
   async function loadServerStats() {
     try {
       const res = await window.apiFetch("/api/admin/stats");
-      if (!res.ok) {
+      if (!res || !res.ok) {
         $("stats-server").innerHTML = '<p class="muted">could not load stats</p>';
         return;
       }
       const data = await res.json();
 
       const parts = [];
-      parts.push('<div class="stat-subtitle">All users</div>');
+      parts.push('<div class="stat-subtitle">All Users</div>');
       parts.push(statRow(data.aggregate));
 
-      parts.push('<div class="stat-subtitle">Average per user</div>');
+      parts.push('<div class="stat-subtitle">Average Per User</div>');
       parts.push(statRow(data.average_per_user));
 
       const users = Object.entries(data.per_user || {})
         .sort((a, b) => b[1].playlists - a[1].playlists);
 
       if (users.length) {
-        parts.push('<div class="stat-subtitle">Per user</div>');
+        parts.push('<div class="stat-subtitle">Per User</div>');
         parts.push(
           '<ul class="stat-list">' +
             users.map(([uid, s]) =>
@@ -169,25 +169,45 @@
     if (state.is_admin) loadServerStats();
   }
 
-  $("logout").addEventListener("click", async () => {
-    await window.apiFetch("/api/account/logout", {method: "POST"});
-    location.href = "/login";
+  $("logout").addEventListener("click", function () {
+    window.showConfirm(
+      "Log out?",
+      "You'll need to log in with Spotify again to use the app.",
+      "Log Out",
+      async function () {
+        await window.apiFetch("/api/account/logout", {method: "POST"});
+        location.href = "/login";
+      },
+      "danger"
+    );
   });
 
-  $("delete-account").addEventListener("click", async () => {
-    if (!confirm("Delete your account data? This removes your session, " +
-                 "tokens, history, and previews. Spotify playlists stay.")) return;
-    await window.apiFetch("/api/account/delete", {method: "POST"});
-    location.href = "/login";
+  $("delete-account").addEventListener("click", function () {
+    window.showConfirm(
+      "Delete account?",
+      "This removes your session, tokens, and history. Spotify playlists stay.",
+      "Delete",
+      async function () {
+        await window.apiFetch("/api/account/delete", {method: "POST"});
+        location.href = "/login";
+      },
+      "danger"
+    );
   });
 
-  $("clear-history").addEventListener("click", async () => {
-    if (!confirm("Clear all history entries and the last preview?")) return;
-    await window.apiFetch("/api/history/clear", {method: "POST"});
-    localStorage.removeItem("sm_last_preview");
-    alert("history cleared");
-    loadSelfStats();
-    if (!$("admin-stats-card").classList.contains("hidden")) loadServerStats();
+  $("clear-history").addEventListener("click", function () {
+    window.showConfirm(
+      "Clear history?",
+      "This removes all history entries and the last preview.",
+      "Clear",
+      async function () {
+        await window.apiFetch("/api/history/clear", {method: "POST"});
+        localStorage.removeItem("sm_last_preview");
+        loadSelfStats();
+        if (!$("admin-stats-card").classList.contains("hidden")) loadServerStats();
+      },
+      "danger"
+    );
   });
 
   if (document.readyState === "loading") {
