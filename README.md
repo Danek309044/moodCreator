@@ -152,7 +152,7 @@ playlist, check your Spotify account settings. The account default
 overrides whatever the API requests, and the API doesn't tell you it
 did so — it returns success either way.
 
-**Mobile app:** Settings → Privacy and Sharing → Playlist visibility
+Mobile app: Settings → Privacy and Sharing → Playlist visibility
 
 Enable "Make new playlists public". After that, the API's `public` flag works as
 expected.
