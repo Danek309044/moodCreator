@@ -1,0 +1,33 @@
+# runtime state — mounted as a volume, never baked in
+data/
+runs.jsonl
+*.log
+
+# git
+.git/
+.gitignore
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# windows helpers — not needed inside the container
+start.bat
+stop.bat
+
+# editor / os
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# docs
+README.md
+
+# compose files themselves
+docker-compose.yml
+Dockerfile
